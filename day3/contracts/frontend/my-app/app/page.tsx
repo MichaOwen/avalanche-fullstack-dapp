@@ -11,7 +11,6 @@ import {
   useChainId,
 } from 'wagmi';
 import { injected } from 'wagmi/connectors';
-import { parseEther } from 'ethers';
 
 // ==============================
 //  CONFIG
@@ -19,6 +18,8 @@ import { parseEther } from 'ethers';
 
 // GANTI dengan contract address hasil deploy kamu day 2
 const CONTRACT_ADDRESS = '0x86F3f692C8Ebf76Dc5bB99f712fd6c7Fc9975f76';
+const REQUIRED_CHAIN_ID = 43113;
+
 
 //  ABI SIMPLE STORAGE
 const SIMPLE_STORAGE_ABI = [
@@ -58,6 +59,8 @@ export default function Page() {
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
 
+
+
   // ==============================
   //  READ CONTRACT
   // ==============================
@@ -78,10 +81,24 @@ export default function Page() {
     writeContract,
     isPending: isWriting,
     error: writeError,
-    data: hash,
-  } = useWriteContract();
+  } = useWriteContract({
+    mutation: {
+      onSuccess: (hash) => {
+        setTxHash(hash);
+        setTxStatus('confirming');
+      },
+      onError: () => {
+        setTxStatus('error');
+      },
+    },
+  });
 
-  // 5️⃣ Wait transaction (CONFIRMATION)
+
+  const [txStatus, setTxStatus] = useState< 'idle' | 'sending' | 'confirming' | 'success' | 'error' >('idle');
+
+
+
+  // transaction (CONFIRMATION)
   const { isSuccess: isConfirmed, isLoading: isConfirming } =
     useWaitForTransactionReceipt({
       hash: txHash,
@@ -91,11 +108,20 @@ export default function Page() {
   useEffect(() => {
     if (isConfirmed) {
       refetch();
+      setTxStatus('success');
     }
   }, [isConfirmed, refetch]);
 
+
   const handleSetValue = async () => {
+    if (!isConnected) return;
+      if (chainId !== REQUIRED_CHAIN_ID) {
+      alert('Please switch to Avalanche network');
+      return;
+    }
     if (!inputValue) return;
+
+    setTxStatus('sending');
 
     writeContract({
       address: CONTRACT_ADDRESS,
@@ -104,6 +130,8 @@ export default function Page() {
       args: [BigInt(inputValue)],
     });
   };
+
+
   
   
   const getErrorMessage = (error: any) => {
@@ -137,11 +165,32 @@ export default function Page() {
         <p className="text-sm text-gray-400">
           Network: {chainId}
         </p>
+        {isConnected && chainId !== REQUIRED_CHAIN_ID && (
+          <p className="text-yellow-400 text-sm">
+            Wrong network. Please switch to Avalanche.
+          </p>
+        )}
         {writeError && (
           <p className="text-red-400 text-sm">
             {getErrorMessage(writeError)}
           </p>
         )}
+        {txStatus === 'sending' && (
+          <p className="text-yellow-400 text-sm">Sending transaction...</p>
+        )}
+
+        {txStatus === 'confirming' && (
+          <p className="text-blue-400 text-sm">Waiting for confirmation...</p>
+        )}
+
+        {txStatus === 'success' && (
+          <p className="text-green-400 text-sm">Transaction success ✅</p>
+        )}
+
+        {txStatus === 'error' && (
+          <p className="text-red-400 text-sm">Transaction failed ❌</p>
+        )}
+
 
         {/* ==========================
             WALLET CONNECT
