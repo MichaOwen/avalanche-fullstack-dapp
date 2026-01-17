@@ -13,7 +13,7 @@ export class BlockchainController {
   }
 
   // GET /blockchain/events
-  @Get("events")
+  @Post("events")
   async getEvents(@Body() body: getEventsDto) {
     return this.blockchainService.getValueUpdatedEvents(
       body.fromBlock,
