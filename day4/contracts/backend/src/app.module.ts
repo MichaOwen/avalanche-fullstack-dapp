@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlockchainModule } from './blockchain/blockchain.module';
+import { EventEntity } from './blockchain/entities/blockchain.entity';
 
 @Module({
-  imports: [BlockchainModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'sqlite',
+      database: 'events.db',
+      entities: [EventEntity],
+      synchronize: true,
+    }),
+    BlockchainModule,
+  ],
 })
 export class AppModule {}
