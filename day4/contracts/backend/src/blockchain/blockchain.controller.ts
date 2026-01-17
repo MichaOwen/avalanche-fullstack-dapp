@@ -1,0 +1,23 @@
+import { Body, Controller, Get, Post} from "@nestjs/common";
+import { BlockchainService } from "./blockchain.service";
+import { getEventsDto } from "./dto/get-event.dto";
+
+@Controller('blockchain')
+export class BlockchainController {
+  constructor(private readonly blockchainService: BlockchainService) {}
+
+  // GET /blockchain/value
+  @Get("value")
+  async getValue() {
+    return this.blockchainService.getLatestValue();
+  }
+
+  // GET /blockchain/events
+  @Get("events")
+  async getEvents(@Body() body: getEventsDto) {
+    return this.blockchainService.getValueUpdatedEvents(
+      body.fromBlock,
+      body.toBlock,
+    );
+  }
+}
