@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint"
   },
+  
   "dependencies": {
     "@tanstack/react-query": "^5.90.17",
     "@walletconnect/ethereum-provider": "^2.23.3",
